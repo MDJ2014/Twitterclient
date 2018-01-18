@@ -1,3 +1,4 @@
+//set up links to dependencies
 const express = require('express');
 const Twit = require('twit');
 const config = require('./config');
@@ -9,43 +10,44 @@ app.set('view engine', 'pug');
 
 const T = new Twit(config);
 
+//set up server
 const server = require('http').createServer(app);
 const io = require('socket.io').listen(server);
 const port = process.env.PORT || 3000;
 
 
 
-
+//set static path for css use and bodyparser
 app.use(bodyParser.urlencoded({ extended: false }));
 const path = require('path')
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-//======================================================================================
 
 
+//start middleware . use twit to access Twitter
 app.get('/', (req, res) => {
     T.get("account/verify_credentials").then(authUser => {
         const user = authUser.data.screen_name;
-
+        //user promises to access each piece of information
         Promise.all([
             T.get('users/lookup', { screen_name: user }),
             T.get('statuses/user_timeline', { screen_name: user, count: 5 }),
             T.get('friends/list', { count: 5 }),
-            T.get('direct_messages/sent', { count: 5 })
+            T.get('direct_messages', { count: 5 })
         ])
 
-
+        //take the data and extract information into objects
         .then(([userData, tweetData, friendData, messageData]) => {
-            let templateData = {
-                user: getUser(userData.data),
-                tweets: getTweetData(tweetData.data),
-                friends: getFriendData(friendData.data),
-                messages: getMessageData(messageData.data)
-            }
-
-            return res.render('layout', templateData);
-
+            let currentData = {
+                    user: getUser(userData.data),
+                    tweets: getTweetData(tweetData.data),
+                    friends: getFriendData(friendData.data),
+                    messages: getMessageData(messageData.data)
+                }
+                //then render the layout getting the information from the currentData object
+            return res.render('layout', currentData);
+            //required catch blocks for promises
         }).catch(error => {
             throw error;
         })
@@ -57,16 +59,18 @@ app.get('/', (req, res) => {
 
 });
 
-
+//start the server
 server.listen(port, () => {
     console.log(`Server running on localhost:  ${port}`);
 });
 
-//======================================================================
+
+//=======================================================
+//for extra credit : will complete later
 // app.post('/', (req, res, next) => {
-//     let message = req.body.message;
+//     let message = req.body.tweet;
 //     if (message.length <= 140) {
-//         T.post('statuses/update', { status: message }, function(err, data, response) {
+//         T.post('statuses/update', { status: tweet }, function(err, data, response) {
 //             res.redirect('/');
 //         });
 //     } else {
@@ -74,8 +78,11 @@ server.listen(port, () => {
 //         next(error);
 //     }
 // });
-//======================================================================
+//==========================================================
 
+
+//functions for extracting information from the data
+//extract the required user data
 function getUser(data) {
     let user = data[0];
     let newUser = {};
@@ -87,7 +94,7 @@ function getUser(data) {
 
     return newUser;
 };
-
+//get user's friend data
 function getFriendData(data) {
     let friends = data.users;
     let allFriends = [];
@@ -97,12 +104,12 @@ function getFriendData(data) {
         newFriend.name = friend.name;
         newFriend.screen_name = friend.screen_name;
         newFriend.profile_image_url_https = friend.profile_image_url_https;
-
         allFriends.push(newFriend);
     }
     return allFriends;
 };
 
+//get user's tweet data for the timeline
 function getTweetData(data) {
     let tweets = data;
     let allTweets = [];
@@ -123,6 +130,7 @@ function getTweetData(data) {
     return allTweets;
 };
 
+//get user's direct message data
 function getMessageData(data) {
     let messages = data;
     let allMessages = [];

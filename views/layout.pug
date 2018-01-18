@@ -26,7 +26,7 @@ html(lang='en')
     link(rel='stylesheet', href='css/global.css')
 
   body
-    header.circle--header
+    header.circle--header(style=`background: url(${user.profile_banner_url}) center / cover`)
       .bounds
         .circle--fluid
           .circle--fluid--cell
@@ -75,4 +75,4 @@ html(lang='en')
         .app--section
           include includes/messages
 
-  include includes/tweet
+  include includes/footer

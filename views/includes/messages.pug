@@ -2,10 +2,10 @@ ul.app--message--list
   each message in messages
     li
       h3 Conversation with
-      a= message.sender_name
+      a= `${message.sender_name}`
       ul.app--message--conversation
         li.app--message
           .app--avatar(style=`background-image: url(${message.sender_profile_image_url_https})`)
             img(src='/static/images/f-spore.png')
-          p.app--message--text= message.text
-          p.app--message--timestamp= message.from_now
+          p.app--message--text= `${message.text}`
+          p.app--message--timestamp= `${message.from_now}`
